@@ -1,0 +1,81 @@
+# =============================================================================
+# CrimeNet SA — Docker Compose
+# File: docker-compose.yml
+# Local development environment
+# Run: docker compose up -d
+# =============================================================================
+
+version: '3.9'
+
+services:
+
+  # ---------------------------------------------------------------------------
+  # NestJS Backend API
+  # ---------------------------------------------------------------------------
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: crimenet-api
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - JWT_SECRET=${JWT_SECRET}
+      - WHATSAPP_ACCESS_TOKEN=${WHATSAPP_ACCESS_TOKEN}
+      - WHATSAPP_PHONE_NUMBER_ID=${WHATSAPP_PHONE_NUMBER_ID}
+      - WHATSAPP_VERIFY_TOKEN=${WHATSAPP_VERIFY_TOKEN}
+      - AI_SERVICE_URL=http://ai:8000
+      - AI_SERVICE_API_KEY=${AI_SERVICE_API_KEY}
+      - WEB_DASHBOARD_URL=http://localhost:3000
+    volumes:
+      - ./backend/src:/app/src  # Hot reload in development
+    depends_on:
+      - ai
+    restart: unless-stopped
+    networks:
+      - crimenet
+
+  # ---------------------------------------------------------------------------
+  # Python AI Microservice
+  # ---------------------------------------------------------------------------
+  ai:
+    build:
+      context: ./ai-service
+      dockerfile: Dockerfile
+    container_name: crimenet-ai
+    ports:
+      - "8000:8000"
+    environment:
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - AI_SERVICE_API_KEY=${AI_SERVICE_API_KEY}
+    restart: unless-stopped
+    networks:
+      - crimenet
+
+  # ---------------------------------------------------------------------------
+  # Redis — for caching and rate limiting
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: crimenet-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    networks:
+      - crimenet
+
+networks:
+  crimenet:
+    driver: bridge
+
+volumes:
+  redis_data:
