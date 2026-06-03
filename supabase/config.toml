@@ -1,0 +1,7 @@
+# Supabase CLI — optional. See database/README.md
+# Usage: supabase link --project-ref YOUR_REF && supabase db push
+
+project_id = "sentinel"
+
+[db]
+major_version = 15
