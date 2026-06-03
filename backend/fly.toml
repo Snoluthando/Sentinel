@@ -1,0 +1,25 @@
+# Fly.io config for Sentinel NestJS API
+# Usage: cd backend && fly launch && fly secrets import < .env.production
+
+app = 'sentinel-api'
+primary_region = 'jnb'
+
+[build]
+  dockerfile = 'Dockerfile'
+
+[env]
+  NODE_ENV = 'production'
+  PORT = '3001'
+
+[http_service]
+  internal_port = 3001
+  force_https = true
+  auto_stop_machines = 'stop'
+  auto_start_machines = true
+  min_machines_running = 0
+
+  [[http_service.checks]]
+    interval = '30s'
+    timeout = '5s'
+    method = 'GET'
+    path = '/health'
